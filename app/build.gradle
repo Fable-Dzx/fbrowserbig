@@ -23,6 +23,23 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    aapt2FromMavenOverride = file("${android.sdkDirectory}/build-tools/36.0.0/aapt2")
+}
+
+// 专门为 aapt2 覆盖仓库，强制走 Google 官方 Maven
+configurations.all {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'com.android.tools.build' && details.requested.name == 'aapt2') {
+            // 标记这个依赖使用独立的仓库
+            details.useTarget 'com.android.tools.build:aapt2:9.2.0-15009934'
+        }
+    }
+}
+
+// 为 aapt2 单独指定官方仓库（关键）
+project.repositories {
+    google()
+    mavenCentral()
 }
 
 dependencies {

@@ -1,8 +1,16 @@
 pluginManagement {
+    // GitHub Actions 会自动注入 CI=true 环境变量
+    def isCI = System.getenv("CI") != null
+    
     repositories {
-        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
-        maven { url = uri("https://maven.aliyun.com/repository/central") }
+        // 只有本地构建时，才优先用阿里云镜像加速
+        if (!isCI) {
+            maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+            maven { url = uri("https://maven.aliyun.com/repository/google") }
+            maven { url = uri("https://maven.aliyun.com/repository/central") }
+        }
+        
+        // 官方仓库（CI 环境直接从这里拉取）
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -10,11 +18,16 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
+    def isCI = System.getenv("CI") != null
+    
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
-        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
-        maven { url = uri("https://maven.aliyun.com/repository/central") }
+        if (!isCI) {
+            maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+            maven { url = uri("https://maven.aliyun.com/repository/google") }
+            maven { url = uri("https://maven.aliyun.com/repository/central") }
+        }
+        
         google()
         mavenCentral()
         gradlePluginPortal()
