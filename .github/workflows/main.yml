@@ -4,8 +4,6 @@ on:
   push:
     branches: [ "main", "master" ]
     tags: [ 'v*' ]
-  pull_request:
-    branches: [ "main", "master" ]
   workflow_dispatch:
 
 permissions:
@@ -25,38 +23,29 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Gradle & Cache Dependencies
+      #强行指定 Gradle 8.7
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew || true
 
-      - name: Install Build-Tools & Platform
+      #安装对应版本的 SDK 和 Build-Tools
+      - name: Install Build-Tools
         run: |
           SDKMANAGER=$(find $ANDROID_HOME/cmdline-tools -name sdkmanager | head -n 1)
-          echo "Using sdkmanager: $SDKMANAGER"
           yes | $SDKMANAGER --licenses > /dev/null 2>&1 || true
-          yes | $SDKMANAGER "build-tools;36.0.0" "platforms;android-36"
+          yes | $SDKMANAGER "build-tools;35.0.0" "platforms;android-35"
 
-      - name: Verify Build-Tools
-        run: |
-          ls -lh $ANDROID_HOME/build-tools/36.0.0/aapt2 || echo "aapt2 not found!"
-
+      # 编译 APK
       - name: Build Release APK
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
+      # 编译 AAB
       - name: Build Release AAB
         run: ./gradlew bundleRelease --no-daemon --stacktrace
-
-      - name: Show Build Outputs & Sizes
-        run: |
-          echo "=== APK Files ==="
-          ls -lh app/build/outputs/apk/release/ || true
-          echo "=== AAB Files ==="
-          ls -lh app/build/outputs/bundle/release/ || true
 
       - name: Upload Artifacts (APK & AAB)
         uses: actions/upload-artifact@v4
